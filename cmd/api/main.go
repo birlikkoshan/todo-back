@@ -1,7 +1,7 @@
 // @title           Todo API
 // @version         1.0
 // @description     Todo API with auth, search, overdue.
-// @host            localhost:8080
+// @host
 // @BasePath        /api/v1
 package main
 
