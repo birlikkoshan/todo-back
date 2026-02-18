@@ -1,12 +1,13 @@
 basePath: /api/v1
 definitions:
-  Worker_internal_dto.CreateTodoRequest:
+  dto.CreateTodoRequest:
     properties:
       description:
         maxLength: 1000
         type: string
       due_at:
-        description: optional
+        description: 'optional: "2026-02-19" or RFC3339'
+        example: "2026-02-19"
         type: string
       title:
         maxLength: 120
@@ -15,14 +16,37 @@ definitions:
     required:
     - title
     type: object
-  Worker_internal_dto.ListTodosResponse:
+  dto.ListTodosResponse:
     properties:
       items:
         items:
-          $ref: '#/definitions/Worker_internal_dto.TodoResponse'
+          $ref: '#/definitions/dto.TodoResponse'
         type: array
     type: object
-  Worker_internal_dto.TodoResponse:
+  dto.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  dto.RegisterRequest:
+    properties:
+      password:
+        minLength: 1
+        type: string
+      username:
+        maxLength: 120
+        minLength: 1
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  dto.TodoResponse:
     properties:
       created_at:
         type: string
@@ -39,36 +63,22 @@ definitions:
       updated_at:
         type: string
     type: object
-  Worker_internal_dto.UpdateTodoRequest:
+  dto.UpdateTodoRequest:
     properties:
       description:
         maxLength: 1000
         type: string
       due_at:
         description: nil = не менять, значение = поставить
+        example: "2026-02-19"
         type: string
+      is_done:
+        description: nil = не менять, true/false = статус
+        type: boolean
       title:
         maxLength: 120
         minLength: 1
         type: string
-    type: object
-  internal_handlers.LoginRequest:
-    properties:
-      password:
-        type: string
-      username:
-        type: string
-    required:
-    - username
-    type: object
-  internal_handlers.RegisterRequest:
-    properties:
-      password:
-        type: string
-      username:
-        type: string
-    required:
-    - username
     type: object
 host: localhost:8080
 info:
@@ -87,7 +97,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/internal_handlers.LoginRequest'
+          $ref: '#/definitions/dto.LoginRequest'
       produces:
       - application/json
       responses:
@@ -99,6 +109,12 @@ paths:
             type: object
         "400":
           description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
           schema:
             additionalProperties:
               type: string
@@ -130,7 +146,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/internal_handlers.RegisterRequest'
+          $ref: '#/definitions/dto.RegisterRequest'
       produces:
       - application/json
       responses:
@@ -142,6 +158,12 @@ paths:
             type: object
         "400":
           description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
           schema:
             additionalProperties:
               type: string
@@ -163,13 +185,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/Worker_internal_dto.ListTodosResponse'
+            $ref: '#/definitions/dto.ListTodosResponse'
         "500":
           description: Internal Server Error
           schema:
             additionalProperties:
               type: string
             type: object
+      security:
+      - CookieAuth: []
       summary: List all todos
       tags:
       - todos
@@ -182,14 +206,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/Worker_internal_dto.CreateTodoRequest'
+          $ref: '#/definitions/dto.CreateTodoRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/Worker_internal_dto.TodoResponse'
+            $ref: '#/definitions/dto.TodoResponse'
         "400":
           description: Bad Request
           schema:
@@ -222,6 +246,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - CookieAuth: []
       summary: Delete a todo
       tags:
       - todos
@@ -238,7 +264,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/Worker_internal_dto.TodoResponse'
+            $ref: '#/definitions/dto.TodoResponse'
         "400":
           description: Bad Request
           schema:
@@ -257,6 +283,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - CookieAuth: []
       summary: Get a todo by ID
       tags:
       - todos
@@ -274,14 +302,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/Worker_internal_dto.UpdateTodoRequest'
+          $ref: '#/definitions/dto.UpdateTodoRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/Worker_internal_dto.TodoResponse'
+            $ref: '#/definitions/dto.TodoResponse'
         "400":
           description: Bad Request
           schema:
@@ -300,6 +328,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - CookieAuth: []
       summary: Update a todo
       tags:
       - todos
@@ -317,7 +347,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/Worker_internal_dto.TodoResponse'
+            $ref: '#/definitions/dto.TodoResponse'
         "400":
           description: Bad Request
           schema:
@@ -336,6 +366,8 @@ paths:
             additionalProperties:
               type: string
             type: object
+      security:
+      - CookieAuth: []
       summary: Mark a todo as done
       tags:
       - todos
@@ -347,13 +379,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/Worker_internal_dto.ListTodosResponse'
+            $ref: '#/definitions/dto.ListTodosResponse'
         "500":
           description: Internal Server Error
           schema:
             additionalProperties:
               type: string
             type: object
+      security:
+      - CookieAuth: []
       summary: List overdue todos
       tags:
       - todos
@@ -371,13 +405,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/Worker_internal_dto.ListTodosResponse'
+            $ref: '#/definitions/dto.ListTodosResponse'
         "500":
           description: Internal Server Error
           schema:
             additionalProperties:
               type: string
             type: object
+      security:
+      - CookieAuth: []
       summary: Search todos by query
       tags:
       - todos

@@ -15,8 +15,8 @@ const sessionCookieName = "session_id"
 
 // AuthHandler handles login, register and logout.
 type AuthHandler struct {
-	sessions   *auth.Store
-	userSvc    *service.UserService
+	sessions *auth.Store
+	userSvc  *service.UserService
 }
 
 // NewAuthHandler returns a new AuthHandler.
@@ -50,7 +50,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "login failed"})
 		return
 	}
-	sessionID, err := h.sessions.Create(c.Request.Context())
+	sessionID, err := h.sessions.Create(c.Request.Context(), user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create session"})
 		return
@@ -89,7 +89,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "registration failed"})
 		return
 	}
-	sessionID, err := h.sessions.Create(c.Request.Context())
+	sessionID, err := h.sessions.Create(c.Request.Context(), user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create session"})
 		return

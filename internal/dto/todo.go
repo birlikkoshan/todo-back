@@ -22,9 +22,9 @@ func (d *DueAt) UnmarshalJSON(data []byte) error {
 	}
 	s := strings.TrimSpace(*raw)
 	layouts := []string{
-		"2006-01-02",        // date only
-		time.RFC3339,        // 2006-01-02T15:04:05Z07:00
-		time.RFC3339Nano,    // with nanoseconds
+		"2006-01-02",     // date only
+		time.RFC3339,     // 2006-01-02T15:04:05Z07:00
+		time.RFC3339Nano, // with nanoseconds
 		"2006-01-02T15:04:05",
 	}
 	for _, layout := range layouts {
@@ -47,13 +47,14 @@ func (d DueAt) Ptr() *time.Time { return d.t }
 type CreateTodoRequest struct {
 	Title       string `json:"title" binding:"required,min=1,max=120"`
 	Description string `json:"description" binding:"max=1000"`
-	DueAt       DueAt  `json:"due_at"` // optional: "2026-02-19" or RFC3339
+	DueAt       DueAt  `json:"due_at" swaggertype:"primitive,string" example:"2026-02-19"` // optional: "2026-02-19" or RFC3339
 }
 
 type UpdateTodoRequest struct {
 	Title       *string `json:"title" binding:"omitempty,min=1,max=120"`
 	Description *string `json:"description" binding:"omitempty,max=1000"`
-	DueAt       *DueAt  `json:"due_at"` // nil = не менять, значение = поставить
+	DueAt       *DueAt  `json:"due_at" swaggertype:"primitive,string" example:"2026-02-19"` // nil = не менять, значение = поставить
+	IsDone      *bool   `json:"is_done"`  // nil = не менять, true/false = статус
 }
 
 type TodoResponse struct {

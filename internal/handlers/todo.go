@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"Worker/internal/auth"
 	dom "Worker/internal/domain"
 	"Worker/internal/dto"
 	"Worker/internal/service"
@@ -25,18 +26,20 @@ func NewTodoHandler(svc *service.TodoService) *TodoHandler {
 // @Tags         todos
 // @Accept       json
 // @Produce      json
+// Security 	 CoockieAuth
 // @Param        body  body      dto.CreateTodoRequest  true  "Todo body"
 // @Success      201   {object}  dto.TodoResponse
 // @Failure      400   {object}  map[string]string
 // @Router       /todos [post]
 func (h *TodoHandler) Create(c *gin.Context) {
+	userID := auth.UserIDFromContext(c)
 	var req dto.CreateTodoRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	t, err := h.svc.Create(c.Request.Context(), req.Title, req.Description, req.DueAt.Ptr())
+	t, err := h.svc.Create(c.Request.Context(), userID, req.Title, req.Description, req.DueAt.Ptr())
 	if err != nil {
 		if err == service.ErrInvalidDueDate {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -58,7 +61,8 @@ func (h *TodoHandler) Create(c *gin.Context) {
 // @Failure      500  {object}  map[string]string
 // @Router       /todos [get]
 func (h *TodoHandler) List(c *gin.Context) {
-	list, err := h.svc.List(c.Request.Context())
+	userID := auth.UserIDFromContext(c)
+	list, err := h.svc.List(c.Request.Context(), userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -78,11 +82,12 @@ func (h *TodoHandler) List(c *gin.Context) {
 // @Failure      500  {object}  map[string]string
 // @Router       /todos/{id} [get]
 func (h *TodoHandler) GetByID(c *gin.Context) {
+	userID := auth.UserIDFromContext(c)
 	id, ok := parseID(c, "id")
 	if !ok {
 		return
 	}
-	t, err := h.svc.GetByID(c.Request.Context(), id)
+	t, err := h.svc.GetByID(c.Request.Context(), userID, id)
 	if err != nil {
 		if err == service.ErrNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
@@ -108,6 +113,7 @@ func (h *TodoHandler) GetByID(c *gin.Context) {
 // @Failure      500  {object}  map[string]string
 // @Router       /todos/{id} [patch]
 func (h *TodoHandler) Update(c *gin.Context) {
+	userID := auth.UserIDFromContext(c)
 	id, ok := parseID(c, "id")
 	if !ok {
 		return
@@ -121,7 +127,7 @@ func (h *TodoHandler) Update(c *gin.Context) {
 	if req.DueAt != nil {
 		duePtr = req.DueAt.Ptr()
 	}
-	t, err := h.svc.Update(c.Request.Context(), id, req.Title, req.Description, duePtr)
+	t, err := h.svc.Update(c.Request.Context(), userID, id, req.Title, req.Description, duePtr, req.IsDone)
 	if err != nil {
 		if err == service.ErrNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
@@ -147,11 +153,12 @@ func (h *TodoHandler) Update(c *gin.Context) {
 // @Failure      500  {object}  map[string]string
 // @Router       /todos/{id} [delete]
 func (h *TodoHandler) Delete(c *gin.Context) {
+	userID := auth.UserIDFromContext(c)
 	id, ok := parseID(c, "id")
 	if !ok {
 		return
 	}
-	err := h.svc.Delete(c.Request.Context(), id)
+	err := h.svc.Delete(c.Request.Context(), userID, id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -171,11 +178,12 @@ func (h *TodoHandler) Delete(c *gin.Context) {
 // @Failure      500  {object}  map[string]string
 // @Router       /todos/{id}/complete [post]
 func (h *TodoHandler) Complete(c *gin.Context) {
+	userID := auth.UserIDFromContext(c)
 	id, ok := parseID(c, "id")
 	if !ok {
 		return
 	}
-	t, err := h.svc.Complete(c.Request.Context(), id)
+	t, err := h.svc.Complete(c.Request.Context(), userID, id)
 	if err != nil {
 		if err == service.ErrNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
@@ -197,8 +205,9 @@ func (h *TodoHandler) Complete(c *gin.Context) {
 // @Failure      500  {object}  map[string]string
 // @Router       /todos/search [get]
 func (h *TodoHandler) Search(c *gin.Context) {
+	userID := auth.UserIDFromContext(c)
 	q := c.Query("q")
-	list, err := h.svc.Search(c.Request.Context(), q)
+	list, err := h.svc.Search(c.Request.Context(), userID, q)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -215,7 +224,8 @@ func (h *TodoHandler) Search(c *gin.Context) {
 // @Failure      500  {object}  map[string]string
 // @Router       /todos/overdue [get]
 func (h *TodoHandler) Overdue(c *gin.Context) {
-	list, err := h.svc.Overdue(c.Request.Context())
+	userID := auth.UserIDFromContext(c)
+	list, err := h.svc.Overdue(c.Request.Context(), userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

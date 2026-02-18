@@ -28,7 +28,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.LoginRequest"
+                            "$ref": "#/definitions/dto.LoginRequest"
                         }
                     }
                 ],
@@ -44,6 +44,15 @@
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -95,7 +104,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.RegisterRequest"
+                            "$ref": "#/definitions/dto.RegisterRequest"
                         }
                     }
                 ],
@@ -118,6 +127,15 @@
                             }
                         }
                     },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -132,6 +150,11 @@
         },
         "/todos": {
             "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -143,7 +166,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Worker_internal_dto.ListTodosResponse"
+                            "$ref": "#/definitions/dto.ListTodosResponse"
                         }
                     },
                     "500": {
@@ -175,7 +198,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/Worker_internal_dto.CreateTodoRequest"
+                            "$ref": "#/definitions/dto.CreateTodoRequest"
                         }
                     }
                 ],
@@ -183,7 +206,7 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/Worker_internal_dto.TodoResponse"
+                            "$ref": "#/definitions/dto.TodoResponse"
                         }
                     },
                     "400": {
@@ -200,6 +223,11 @@
         },
         "/todos/overdue": {
             "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -211,7 +239,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Worker_internal_dto.ListTodosResponse"
+                            "$ref": "#/definitions/dto.ListTodosResponse"
                         }
                     },
                     "500": {
@@ -228,6 +256,11 @@
         },
         "/todos/search": {
             "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -248,7 +281,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Worker_internal_dto.ListTodosResponse"
+                            "$ref": "#/definitions/dto.ListTodosResponse"
                         }
                     },
                     "500": {
@@ -265,6 +298,11 @@
         },
         "/todos/{id}": {
             "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -285,7 +323,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Worker_internal_dto.TodoResponse"
+                            "$ref": "#/definitions/dto.TodoResponse"
                         }
                     },
                     "400": {
@@ -318,6 +356,11 @@
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
                 "tags": [
                     "todos"
                 ],
@@ -356,6 +399,11 @@
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -380,7 +428,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/Worker_internal_dto.UpdateTodoRequest"
+                            "$ref": "#/definitions/dto.UpdateTodoRequest"
                         }
                     }
                 ],
@@ -388,7 +436,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Worker_internal_dto.TodoResponse"
+                            "$ref": "#/definitions/dto.TodoResponse"
                         }
                     },
                     "400": {
@@ -423,6 +471,11 @@
         },
         "/todos/{id}/complete": {
             "post": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -443,7 +496,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Worker_internal_dto.TodoResponse"
+                            "$ref": "#/definitions/dto.TodoResponse"
                         }
                     },
                     "400": {
@@ -478,7 +531,7 @@
         }
     },
     "definitions": {
-        "Worker_internal_dto.CreateTodoRequest": {
+        "dto.CreateTodoRequest": {
             "type": "object",
             "required": [
                 "title"
@@ -489,8 +542,9 @@
                     "maxLength": 1000
                 },
                 "due_at": {
-                    "description": "optional",
-                    "type": "string"
+                    "description": "optional: \"2026-02-19\" or RFC3339",
+                    "type": "string",
+                    "example": "2026-02-19"
                 },
                 "title": {
                     "type": "string",
@@ -499,18 +553,51 @@
                 }
             }
         },
-        "Worker_internal_dto.ListTodosResponse": {
+        "dto.ListTodosResponse": {
             "type": "object",
             "properties": {
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/Worker_internal_dto.TodoResponse"
+                        "$ref": "#/definitions/dto.TodoResponse"
                     }
                 }
             }
         },
-        "Worker_internal_dto.TodoResponse": {
+        "dto.LoginRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 120,
+                    "minLength": 1
+                }
+            }
+        },
+        "dto.TodoResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -536,7 +623,7 @@
                 }
             }
         },
-        "Worker_internal_dto.UpdateTodoRequest": {
+        "dto.UpdateTodoRequest": {
             "type": "object",
             "properties": {
                 "description": {
@@ -545,40 +632,17 @@
                 },
                 "due_at": {
                     "description": "nil = не менять, значение = поставить",
-                    "type": "string"
+                    "type": "string",
+                    "example": "2026-02-19"
+                },
+                "is_done": {
+                    "description": "nil = не менять, true/false = статус",
+                    "type": "boolean"
                 },
                 "title": {
                     "type": "string",
                     "maxLength": 120,
                     "minLength": 1
-                }
-            }
-        },
-        "internal_handlers.LoginRequest": {
-            "type": "object",
-            "required": [
-                "username"
-            ],
-            "properties": {
-                "password": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_handlers.RegisterRequest": {
-            "type": "object",
-            "required": [
-                "username"
-            ],
-            "properties": {
-                "password": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
                 }
             }
         }

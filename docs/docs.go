@@ -34,7 +34,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.LoginRequest"
+                            "$ref": "#/definitions/dto.LoginRequest"
                         }
                     }
                 ],
@@ -50,6 +50,15 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -101,7 +110,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_handlers.RegisterRequest"
+                            "$ref": "#/definitions/dto.RegisterRequest"
                         }
                     }
                 ],
@@ -124,6 +133,15 @@ const docTemplate = `{
                             }
                         }
                     },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -138,6 +156,11 @@ const docTemplate = `{
         },
         "/todos": {
             "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -149,7 +172,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Worker_internal_dto.ListTodosResponse"
+                            "$ref": "#/definitions/dto.ListTodosResponse"
                         }
                     },
                     "500": {
@@ -181,7 +204,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/Worker_internal_dto.CreateTodoRequest"
+                            "$ref": "#/definitions/dto.CreateTodoRequest"
                         }
                     }
                 ],
@@ -189,7 +212,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/Worker_internal_dto.TodoResponse"
+                            "$ref": "#/definitions/dto.TodoResponse"
                         }
                     },
                     "400": {
@@ -206,6 +229,11 @@ const docTemplate = `{
         },
         "/todos/overdue": {
             "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -217,7 +245,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Worker_internal_dto.ListTodosResponse"
+                            "$ref": "#/definitions/dto.ListTodosResponse"
                         }
                     },
                     "500": {
@@ -234,6 +262,11 @@ const docTemplate = `{
         },
         "/todos/search": {
             "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -254,7 +287,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Worker_internal_dto.ListTodosResponse"
+                            "$ref": "#/definitions/dto.ListTodosResponse"
                         }
                     },
                     "500": {
@@ -271,6 +304,11 @@ const docTemplate = `{
         },
         "/todos/{id}": {
             "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -291,7 +329,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Worker_internal_dto.TodoResponse"
+                            "$ref": "#/definitions/dto.TodoResponse"
                         }
                     },
                     "400": {
@@ -324,6 +362,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
                 "tags": [
                     "todos"
                 ],
@@ -362,6 +405,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -386,7 +434,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/Worker_internal_dto.UpdateTodoRequest"
+                            "$ref": "#/definitions/dto.UpdateTodoRequest"
                         }
                     }
                 ],
@@ -394,7 +442,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Worker_internal_dto.TodoResponse"
+                            "$ref": "#/definitions/dto.TodoResponse"
                         }
                     },
                     "400": {
@@ -429,6 +477,11 @@ const docTemplate = `{
         },
         "/todos/{id}/complete": {
             "post": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -449,7 +502,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Worker_internal_dto.TodoResponse"
+                            "$ref": "#/definitions/dto.TodoResponse"
                         }
                     },
                     "400": {
@@ -484,7 +537,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "Worker_internal_dto.CreateTodoRequest": {
+        "dto.CreateTodoRequest": {
             "type": "object",
             "required": [
                 "title"
@@ -495,8 +548,9 @@ const docTemplate = `{
                     "maxLength": 1000
                 },
                 "due_at": {
-                    "description": "optional",
-                    "type": "string"
+                    "description": "optional: \"2026-02-19\" or RFC3339",
+                    "type": "string",
+                    "example": "2026-02-19"
                 },
                 "title": {
                     "type": "string",
@@ -505,18 +559,51 @@ const docTemplate = `{
                 }
             }
         },
-        "Worker_internal_dto.ListTodosResponse": {
+        "dto.ListTodosResponse": {
             "type": "object",
             "properties": {
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/Worker_internal_dto.TodoResponse"
+                        "$ref": "#/definitions/dto.TodoResponse"
                     }
                 }
             }
         },
-        "Worker_internal_dto.TodoResponse": {
+        "dto.LoginRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 120,
+                    "minLength": 1
+                }
+            }
+        },
+        "dto.TodoResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -542,7 +629,7 @@ const docTemplate = `{
                 }
             }
         },
-        "Worker_internal_dto.UpdateTodoRequest": {
+        "dto.UpdateTodoRequest": {
             "type": "object",
             "properties": {
                 "description": {
@@ -551,40 +638,17 @@ const docTemplate = `{
                 },
                 "due_at": {
                     "description": "nil = не менять, значение = поставить",
-                    "type": "string"
+                    "type": "string",
+                    "example": "2026-02-19"
+                },
+                "is_done": {
+                    "description": "nil = не менять, true/false = статус",
+                    "type": "boolean"
                 },
                 "title": {
                     "type": "string",
                     "maxLength": 120,
                     "minLength": 1
-                }
-            }
-        },
-        "internal_handlers.LoginRequest": {
-            "type": "object",
-            "required": [
-                "username"
-            ],
-            "properties": {
-                "password": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "internal_handlers.RegisterRequest": {
-            "type": "object",
-            "required": [
-                "username"
-            ],
-            "properties": {
-                "password": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
                 }
             }
         }

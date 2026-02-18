@@ -43,7 +43,7 @@ services:
       # Overrides for Docker: use service names instead of localhost
       PG_DSN: "postgres://app:app@postgres:5432/app?sslmode=disable"
       REDIS_ADDR: "redis:6379"
-      REDIS_PASSWORD: "admin"
+      REDIS_PASSWORD: ""
     ports:
       - "8080:8080"
     restart: unless-stopped
