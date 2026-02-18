@@ -1,0 +1,6 @@
+api.exe
+.env
+.idea
+.DS_Store
+.vscode
+.env.example

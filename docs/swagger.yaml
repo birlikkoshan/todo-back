@@ -1,0 +1,384 @@
+basePath: /api/v1
+definitions:
+  Worker_internal_dto.CreateTodoRequest:
+    properties:
+      description:
+        maxLength: 1000
+        type: string
+      due_at:
+        description: optional
+        type: string
+      title:
+        maxLength: 120
+        minLength: 1
+        type: string
+    required:
+    - title
+    type: object
+  Worker_internal_dto.ListTodosResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/Worker_internal_dto.TodoResponse'
+        type: array
+    type: object
+  Worker_internal_dto.TodoResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      due_at:
+        type: string
+      id:
+        type: integer
+      is_done:
+        type: boolean
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  Worker_internal_dto.UpdateTodoRequest:
+    properties:
+      description:
+        maxLength: 1000
+        type: string
+      due_at:
+        description: nil = не менять, значение = поставить
+        type: string
+      title:
+        maxLength: 120
+        minLength: 1
+        type: string
+    type: object
+  internal_handlers.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - username
+    type: object
+  internal_handlers.RegisterRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - username
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Todo API with auth, search, overdue.
+  title: Todo API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      responses:
+        "204":
+          description: No Content
+      summary: Logout
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handlers.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register
+      tags:
+      - auth
+  /todos:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Worker_internal_dto.ListTodosResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List all todos
+      tags:
+      - todos
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Todo body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/Worker_internal_dto.CreateTodoRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/Worker_internal_dto.TodoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a todo
+      tags:
+      - todos
+  /todos/{id}:
+    delete:
+      parameters:
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a todo
+      tags:
+      - todos
+    get:
+      parameters:
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Worker_internal_dto.TodoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get a todo by ID
+      tags:
+      - todos
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Partial update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/Worker_internal_dto.UpdateTodoRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Worker_internal_dto.TodoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a todo
+      tags:
+      - todos
+  /todos/{id}/complete:
+    post:
+      parameters:
+      - description: Todo ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Worker_internal_dto.TodoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Mark a todo as done
+      tags:
+      - todos
+  /todos/overdue:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Worker_internal_dto.ListTodosResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List overdue todos
+      tags:
+      - todos
+  /todos/search:
+    get:
+      parameters:
+      - description: Search query (title/description)
+        in: query
+        name: q
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Worker_internal_dto.ListTodosResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Search todos by query
+      tags:
+      - todos
+swagger: "2.0"
