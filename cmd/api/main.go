@@ -37,9 +37,9 @@ func main() {
 	server := &http.Server{
 		Addr:         "0.0.0.0:" + cfg.HTTP.Port,
 		Handler:      application.Router(),
-		ReadTimeout:  cfg.HTTP.ReadTimeout.Duration(),
-		WriteTimeout: cfg.HTTP.WriteTimeout.Duration(),
-		IdleTimeout:  cfg.HTTP.IdleTimeout.Duration(),
+		ReadTimeout:  cfg.HTTP.ReadTimeout,
+		WriteTimeout: cfg.HTTP.WriteTimeout,
+		IdleTimeout:  cfg.HTTP.IdleTimeout,
 	}
 
 	go func() {

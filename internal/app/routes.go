@@ -42,7 +42,7 @@ func Setup(r *gin.Engine, cfg config.Config, db *pgxpool.Pool, rdb *redis.Client
 
 	protected := api.Group("", auth.RequireSession(sessionStore))
 	todoRepo := repo.NewPGTodoRepo(db)
-	todoCache := cache.NewTodoCache(rdb, cfg.Redis.DefaultTTL.Duration())
+	todoCache := cache.NewTodoCache(rdb, cfg.Redis.DefaultTTL)
 	todoSvc := service.NewTodoService(todoRepo, todoCache)
 	todoHandler := handlers.NewTodoHandler(todoSvc)
 	registerTodoRoutes(protected, todoHandler)
