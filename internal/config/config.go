@@ -2,37 +2,13 @@ package config
 
 import (
 	"fmt"
-	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
+	"Worker/internal/utils"
+
 	"github.com/ilyakaznacheev/cleanenv"
 )
-
-// parseDuration parses env value as time.Duration:
-// - "10s", "5m" etc. (time.ParseDuration)
-// - bare number "10" = seconds (10s)
-func parseDuration(s string) (time.Duration, error) {
-	s = strings.TrimSpace(s)
-	// Strip optional surrounding quotes: "10s" or '10s'
-	if len(s) >= 2 && ((s[0] == '"' && s[len(s)-1] == '"') || (s[0] == '\'' && s[len(s)-1] == '\'')) {
-		s = s[1 : len(s)-1]
-	}
-
-	if s == "" {
-		return 0, fmt.Errorf("empty duration")
-	}
-	// Bare number first (e.g. Railway HTTP_READ_TIMEOUT=10) — so "10s" never goes to ParseInt
-	if n, err := strconv.ParseInt(s, 10, 64); err == nil {
-		return time.Duration(n) * time.Second, nil
-	}
-	d, err := time.ParseDuration(s)
-	if err != nil {
-		return 0, fmt.Errorf("duration must be like 10s, 5m or a number of seconds: %w", err)
-	}
-	return d, nil
-}
 
 type Config struct {
 	App   AppConfig
@@ -83,7 +59,7 @@ func Load() (Config, error) {
 	}
 	// Parse Redis URL / Addr overrides
 	if cfg.Redis.URL != "" {
-		addr, password, db, err := parseRedisURL(cfg.Redis.URL)
+		addr, password, db, err := utils.ParseRedisURL(cfg.Redis.URL)
 		if err != nil {
 			return Config{}, fmt.Errorf("REDIS_URL: %w", err)
 		}
@@ -92,7 +68,7 @@ func Load() (Config, error) {
 		cfg.Redis.DB = db
 	} else if s := strings.TrimSpace(cfg.Redis.Addr); strings.HasPrefix(s, "redis://") || strings.HasPrefix(s, "rediss://") {
 		// Railway and others sometimes set REDIS_ADDR to the full URL
-		addr, password, db, err := parseRedisURL(s)
+		addr, password, db, err := utils.ParseRedisURL(s)
 		if err != nil {
 			return Config{}, fmt.Errorf("REDIS_ADDR (URL): %w", err)
 		}
@@ -106,42 +82,20 @@ func Load() (Config, error) {
 
 	// Parse HTTP durations
 	var err error
-	if cfg.HTTP.ReadTimeout, err = parseDuration(cfg.HTTP.ReadTimeoutRaw); err != nil {
+	if cfg.HTTP.ReadTimeout, err = utils.ParseDurationEnv(cfg.HTTP.ReadTimeoutRaw); err != nil {
 		return Config{}, fmt.Errorf("HTTP_READ_TIMEOUT: %w", err)
 	}
-	if cfg.HTTP.WriteTimeout, err = parseDuration(cfg.HTTP.WriteTimeoutRaw); err != nil {
+	if cfg.HTTP.WriteTimeout, err = utils.ParseDurationEnv(cfg.HTTP.WriteTimeoutRaw); err != nil {
 		return Config{}, fmt.Errorf("HTTP_WRITE_TIMEOUT: %w", err)
 	}
-	if cfg.HTTP.IdleTimeout, err = parseDuration(cfg.HTTP.IdleTimeoutRaw); err != nil {
+	if cfg.HTTP.IdleTimeout, err = utils.ParseDurationEnv(cfg.HTTP.IdleTimeoutRaw); err != nil {
 		return Config{}, fmt.Errorf("HTTP_IDLE_TIMEOUT: %w", err)
 	}
 
 	// Parse Redis TTL
-	if cfg.Redis.DefaultTTL, err = parseDuration(cfg.Redis.DefaultTTLRaw); err != nil {
+	if cfg.Redis.DefaultTTL, err = utils.ParseDurationEnv(cfg.Redis.DefaultTTLRaw); err != nil {
 		return Config{}, fmt.Errorf("REDIS_DEFAULT_TTL: %w", err)
 	}
 
 	return cfg, nil
-}
-
-// parseRedisURL extracts host:port, password and DB from redis:// or rediss:// URL.
-func parseRedisURL(s string) (addr, password string, db int, err error) {
-	u, err := url.Parse(strings.TrimSpace(s))
-	if err != nil {
-		return "", "", 0, err
-	}
-	if u.Scheme != "redis" && u.Scheme != "rediss" {
-		return "", "", 0, fmt.Errorf("scheme must be redis or rediss, got %q", u.Scheme)
-	}
-	addr = u.Host
-	if addr == "" {
-		return "", "", 0, fmt.Errorf("missing host in Redis URL")
-	}
-	if u.User != nil {
-		password, _ = u.User.Password()
-	}
-	if u.Path != "" && len(u.Path) > 1 {
-		db, _ = strconv.Atoi(strings.TrimPrefix(u.Path, "/"))
-	}
-	return addr, password, db, nil
 }

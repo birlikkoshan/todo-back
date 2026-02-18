@@ -7,9 +7,9 @@ import (
 
 	dom "Worker/internal/domain"
 	"Worker/internal/repo"
+	"Worker/internal/utils"
 
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -57,18 +57,10 @@ func (s *UserService) Register(ctx context.Context, username, password string) (
 	}
 	u, err := s.repo.Create(ctx, username, string(hash))
 	if err != nil {
-		if isUniqueViolation(err) {
+		if utils.IsPGUniqueViolation(err) {
 			return dom.User{}, ErrUsernameTaken
 		}
 		return dom.User{}, err
 	}
 	return u, nil
-}
-
-func isUniqueViolation(err error) bool {
-	var pge *pgconn.PgError
-	if errors.As(err, &pge) {
-		return pge.Code == "23505"
-	}
-	return false
 }

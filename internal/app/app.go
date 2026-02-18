@@ -7,6 +7,7 @@ import (
 
 	"Worker/internal/config"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -24,14 +25,12 @@ type App struct {
 func New(cfg config.Config) (*App, error) {
 	a := &App{cfg: cfg}
 
-	// 1) Connect Postgres
 	db, err := newPostgres(cfg.PG.DSN)
 	if err != nil {
 		return nil, err
 	}
 	a.db = db
 
-	// 2) Connect Redis
 	rdb, err := newRedis(cfg.Redis)
 	if err != nil {
 		db.Close()
@@ -53,12 +52,8 @@ func (a *App) Router() *gin.Engine {
 	return a.router
 }
 
-// Close закрывает ресурсы приложения.
-// Контекст здесь на будущее (если добавишь закрытие с таймаутом, drain очередей и т.д.)
 func (a *App) Close(ctx context.Context) error {
-	_ = ctx // сейчас не нужен, но оставляем для "взрослого" API
-
-	// Закрывать лучше в обратном порядке создания
+	_ = ctx
 	if a.redis != nil {
 		_ = a.redis.Close()
 	}
@@ -68,15 +63,11 @@ func (a *App) Close(ctx context.Context) error {
 	return nil
 }
 
-// -------------------- helpers --------------------
-
 func newPostgres(dsn string) (*pgxpool.Pool, error) {
 	cfg, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
 		return nil, fmt.Errorf("pg parse config: %w", err)
 	}
-
-	// Настройки пула — минимум для адекватной работы
 	cfg.MaxConns = 10
 	cfg.MinConns = 2
 	cfg.MaxConnIdleTime = 5 * time.Minute
@@ -86,8 +77,6 @@ func newPostgres(dsn string) (*pgxpool.Pool, error) {
 	if err != nil {
 		return nil, fmt.Errorf("pg connect: %w", err)
 	}
-
-	// Проверка соединения (fail fast)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	if err := pool.Ping(ctx); err != nil {
@@ -117,8 +106,6 @@ func newRedis(cfg config.RedisConfig) (*redis.Client, error) {
 }
 
 func runMigrations(dsn string, migrationsDir string) error {
-	// goose требует database/sql, поэтому открываем sql.DB через pgx stdlib
-	// Это нормально: миграции — отдельная прослойка, не runtime-пул.
 
 	db, err := goose.OpenDBWithDriver("pgx", dsn)
 	if err != nil {
@@ -134,6 +121,15 @@ func runMigrations(dsn string, migrationsDir string) error {
 
 func newRouter(cfg config.Config, db *pgxpool.Pool, rdb *redis.Client) *gin.Engine {
 	r := gin.Default()
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:  []string{"*"},
+		AllowMethods:  []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"},
+		AllowHeaders:  []string{"Origin", "Content-Type", "Accept", "Authorization", "Cookie"},
+		ExposeHeaders: []string{"Content-Length", "Content-Type"},
+		MaxAge:        12 * time.Hour,
+	}))
+
 	Setup(r, cfg, db, rdb)
 	return r
 }
