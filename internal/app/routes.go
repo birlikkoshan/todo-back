@@ -20,11 +20,17 @@ import (
 
 // Setup registers all routes on the given engine.
 func Setup(r *gin.Engine, cfg config.Config, db *pgxpool.Pool, rdb *redis.Client) {
+	r.GET("/", rootHandler(cfg))
 	r.GET("/health", healthHandler(cfg))
 	r.GET("/version", versionHandler(cfg))
 	r.GET("/swagger-doc.json", swaggerDocHandler())
 	r.GET("/swagger", func(c *gin.Context) { c.Redirect(302, "/swagger/index.html") })
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.URL("/swagger-doc.json")))
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(
+		swaggerFiles.Handler,
+		ginSwagger.URL("/swagger-doc.json"),
+		ginSwagger.DefaultModelsExpandDepth(-1),
+		ginSwagger.PersistAuthorization(true),
+	))
 
 	api := r.Group("/api/v1")
 
@@ -41,6 +47,20 @@ func Setup(r *gin.Engine, cfg config.Config, db *pgxpool.Pool, rdb *redis.Client
 	todoHandler := handlers.NewTodoHandler(todoSvc)
 	registerTodoRoutes(protected, todoHandler)
 
+}
+
+func rootHandler(cfg config.Config) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"service": "Todo API",
+			"version": cfg.App.Version,
+			"env":     cfg.App.Env,
+			"docs":    "/swagger/index.html",
+			"spec":    "/swagger-doc.json",
+			"health": "/health",
+			"api":    "/api/v1",
+		})
+	}
 }
 
 func healthHandler(cfg config.Config) gin.HandlerFunc {

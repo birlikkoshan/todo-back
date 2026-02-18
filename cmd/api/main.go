@@ -9,6 +9,7 @@ package main
 import (
 	"context"
 	"errors"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -24,15 +25,17 @@ import (
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
-		panic(err)
+		log.Fatalf("config: %v", err)
 	}
+	log.Printf("config loaded, connecting to DB and Redis...")
 
 	application, err := app.New(cfg)
 	if err != nil {
-		panic(err)
+		log.Fatalf("app init: %v", err)
 	}
+	log.Printf("app ready, starting HTTP server")
 	server := &http.Server{
-		Addr:         ":" + cfg.HTTP.Port,
+		Addr:         "0.0.0.0:" + cfg.HTTP.Port,
 		Handler:      application.Router(),
 		ReadTimeout:  cfg.HTTP.ReadTimeout.Duration(),
 		WriteTimeout: cfg.HTTP.WriteTimeout.Duration(),
@@ -40,7 +43,9 @@ func main() {
 	}
 
 	go func() {
+		log.Printf("HTTP server listening on %s", server.Addr)
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Printf("HTTP server error: %v", err)
 			panic(err)
 		}
 	}()
