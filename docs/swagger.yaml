@@ -417,7 +417,4 @@ paths:
       summary: Search todos by query
       tags:
       - todos
-schemes:
-- http
-- https
 swagger: "2.0"
