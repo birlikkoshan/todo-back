@@ -6,7 +6,6 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "{{.Host}}",
     "basePath": "/api/v1",
     "paths": {
         "/auth/login": {

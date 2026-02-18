@@ -1,8 +1,8 @@
 // @title           Todo API
 // @version         1.0
 // @description     Todo API with auth, search, overdue.
-// @host            {{.Host}}
 // @BasePath        /api/v1
+
 package main
 
 import (

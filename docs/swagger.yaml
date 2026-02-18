@@ -80,7 +80,6 @@ definitions:
         minLength: 1
         type: string
     type: object
-host: '{{.Host}}'
 info:
   contact: {}
   description: Todo API with auth, search, overdue.
