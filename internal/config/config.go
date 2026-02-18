@@ -96,6 +96,15 @@ func Load() (Config, error) {
 		cfg.Redis.Addr = addr
 		cfg.Redis.Password = password
 		cfg.Redis.DB = db
+	} else if s := strings.TrimSpace(cfg.Redis.Addr); strings.HasPrefix(s, "redis://") || strings.HasPrefix(s, "rediss://") {
+		// Railway and others sometimes set REDIS_ADDR to the full URL
+		addr, password, db, err := parseRedisURL(s)
+		if err != nil {
+			return Config{}, fmt.Errorf("REDIS_ADDR (URL): %w", err)
+		}
+		cfg.Redis.Addr = addr
+		cfg.Redis.Password = password
+		cfg.Redis.DB = db
 	}
 	if cfg.Redis.Addr == "" {
 		return Config{}, fmt.Errorf("REDIS_ADDR or REDIS_URL is required")
