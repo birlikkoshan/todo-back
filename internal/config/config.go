@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -71,12 +72,15 @@ type PGConfig struct {
 }
 
 type RedisConfig struct {
-	Addr     string `env:"REDIS_ADDR" env-required:"true"`
+	// Addr is "host:port". Optional if URL is set (e.g. Railway REDIS_URL).
+	Addr     string `env:"REDIS_ADDR" env-default:""`
 	Password string `env:"REDIS_PASSWORD" env-default:""`
 	DB       int    `env:"REDIS_DB" env-default:"0"`
+	// URL overrides Addr/Password/DB if set. Example: redis://default:password@host:35459
+	URL string `env:"REDIS_URL" env-default:""`
 
 	// TTL для кеша (на будущее). Значение: "60s", "5m" или число секунд.
-	DefaultTTL durationSeconds `env:"REDIS_DEFAULT_TTL" env-default:"60s"`
+	DefaultTTL durationSeconds `env:"REDIS_DEFAULT_TTL" env-default:"60"`
 }
 
 func Load() (Config, error) {
@@ -84,5 +88,39 @@ func Load() (Config, error) {
 	if err := cleanenv.ReadEnv(&cfg); err != nil {
 		return Config{}, fmt.Errorf("read env: %w", err)
 	}
+	if cfg.Redis.URL != "" {
+		addr, password, db, err := parseRedisURL(cfg.Redis.URL)
+		if err != nil {
+			return Config{}, fmt.Errorf("REDIS_URL: %w", err)
+		}
+		cfg.Redis.Addr = addr
+		cfg.Redis.Password = password
+		cfg.Redis.DB = db
+	}
+	if cfg.Redis.Addr == "" {
+		return Config{}, fmt.Errorf("REDIS_ADDR or REDIS_URL is required")
+	}
 	return cfg, nil
+}
+
+// parseRedisURL extracts host:port, password and DB from redis:// or rediss:// URL.
+func parseRedisURL(s string) (addr, password string, db int, err error) {
+	u, err := url.Parse(strings.TrimSpace(s))
+	if err != nil {
+		return "", "", 0, err
+	}
+	if u.Scheme != "redis" && u.Scheme != "rediss" {
+		return "", "", 0, fmt.Errorf("scheme must be redis or rediss, got %q", u.Scheme)
+	}
+	addr = u.Host
+	if addr == "" {
+		return "", "", 0, fmt.Errorf("missing host in Redis URL")
+	}
+	if u.User != nil {
+		password, _ = u.User.Password()
+	}
+	if u.Path != "" && len(u.Path) > 1 {
+		db, _ = strconv.Atoi(strings.TrimPrefix(u.Path, "/"))
+	}
+	return addr, password, db, nil
 }

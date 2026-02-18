@@ -23,6 +23,7 @@ func Setup(r *gin.Engine, cfg config.Config, db *pgxpool.Pool, rdb *redis.Client
 	r.GET("/health", healthHandler(cfg))
 	r.GET("/version", versionHandler(cfg))
 	r.GET("/swagger-doc.json", swaggerDocHandler())
+	r.GET("/swagger", func(c *gin.Context) { c.Redirect(302, "/swagger/index.html") })
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, ginSwagger.URL("/swagger-doc.json")))
 
 	api := r.Group("/api/v1")
