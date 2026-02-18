@@ -30,24 +30,20 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	// ---------- http server ----------
 	server := &http.Server{
 		Addr:         ":" + cfg.HTTP.Port,
 		Handler:      application.Router(),
-		ReadTimeout:  cfg.HTTP.ReadTimeout,
-		WriteTimeout: cfg.HTTP.WriteTimeout,
-		IdleTimeout:  cfg.HTTP.IdleTimeout,
+		ReadTimeout:  cfg.HTTP.ReadTimeout.Duration(),
+		WriteTimeout: cfg.HTTP.WriteTimeout.Duration(),
+		IdleTimeout:  cfg.HTTP.IdleTimeout.Duration(),
 	}
 
-	// ---------- start ----------
 	go func() {
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			panic(err)
 		}
 	}()
 
-	// ---------- graceful shutdown ----------
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
@@ -56,12 +52,10 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	// stop accepting new connections
 	if err := server.Shutdown(ctx); err != nil {
 		panic(err)
 	}
 
-	// close DB, redis, etc
 	if err := application.Close(ctx); err != nil {
 		panic(err)
 	}

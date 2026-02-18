@@ -39,9 +39,6 @@ func New(cfg config.Config) (*App, error) {
 	}
 	a.redis = rdb
 
-	// 3) Run migrations (goose)
-	//    Важно: migrations path должен существовать внутри контейнера.
-	//    Мы копировали ./migrations в Dockerfile → значит ok.
 	if err := runMigrations(cfg.PG.DSN, "./migrations"); err != nil {
 		a.redis.Close()
 		a.db.Close()
